@@ -136,25 +136,25 @@ export function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
-              asChild
               size="lg"
               tooltip="Sign out"
-            >
-              <Link href="/">
-                <Avatar className="size-8">
-                  <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground text-xs">
-                    AO
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex flex-1 flex-col leading-tight">
-                  <span className="text-sm font-medium">Amara Okafor</span>
-                  <span className="text-xs text-sidebar-foreground/60">
-                    Sign out
-                  </span>
-                </div>
-                <LogOut className="size-4 text-sidebar-foreground/60" />
-              </Link>
-            </SidebarMenuButton>
+              render={
+                <Link href="/">
+                  <Avatar className="size-8">
+                    <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground text-xs">
+                      AO
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-1 flex-col leading-tight">
+                    <span className="text-sm font-medium">Amara Okafor</span>
+                    <span className="text-xs text-sidebar-foreground/60">
+                      Sign out
+                    </span>
+                  </div>
+                  <LogOut className="size-4 text-sidebar-foreground/60" />
+                </Link>
+              }
+            />
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
