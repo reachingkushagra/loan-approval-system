@@ -52,7 +52,7 @@ export default function LoginPage() {
           <span className="flex size-9 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
             <Landmark className="size-5" />
           </span>
-          <span className="text-lg font-semibold">Northbridge</span>
+          <span className="text-lg font-semibold">Bright Bridge</span>
         </div>
 
         <div className="max-w-md">
@@ -80,7 +80,7 @@ export default function LoginPage() {
         </div>
 
         <p className="text-xs text-sidebar-foreground/50">
-          © 2025 Northbridge Lending, Inc. NMLS #482193. Equal Housing Lender.
+          © 2025 BrightBridge Lending, Inc. NMLS #482193. Equal Housing Lender.
         </p>
       </div>
 
@@ -91,7 +91,7 @@ export default function LoginPage() {
             <span className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <Landmark className="size-5" />
             </span>
-            <span className="text-lg font-semibold">Northbridge</span>
+            <span className="text-lg font-semibold">BrightBridge</span>
           </div>
 
           <h2 className="text-2xl font-semibold tracking-tight">Welcome back</h2>
@@ -158,7 +158,7 @@ export default function LoginPage() {
           </Button>
 
           <p className="mt-8 text-center text-sm text-muted-foreground">
-            New to Northbridge?{' '}
+            New to BrightBridge?{' '}
             <Link
               href="/apply"
               className="font-medium text-primary hover:underline"
