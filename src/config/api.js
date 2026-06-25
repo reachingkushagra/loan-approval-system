@@ -1,0 +1,1 @@
+export const API_BASE_URL = 'https://loan-approval-system-6iwk.onrender.com'

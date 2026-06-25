@@ -1,22 +1,52 @@
 import type { LoanApplication, AnalyticsData } from '@/lib/data'
+import { API_BASE_URL } from '@/src/config/api'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+const API_BASE = API_BASE_URL
+const API_TIMEOUT_MS = 10000
+
+function createTimeoutSignal(timeoutMs = API_TIMEOUT_MS) {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
+
+  return {
+    signal: controller.signal,
+    clear: () => clearTimeout(timeoutId),
+  }
+}
 
 async function request<T>(path: string, options: RequestInit = {}) {
-  const response = await fetch(`${API_BASE}${path}`, {
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    ...options,
-    cache: 'no-store',
-  })
+  const { signal, clear } = createTimeoutSignal()
 
-  if (!response.ok) {
-    const body = await response.text()
-    throw new Error(body || `API request failed with status ${response.status}`)
+  try {
+    const response = await fetch(`${API_BASE}${path}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(options.headers ?? {}),
+      },
+      ...options,
+      signal,
+      cache: 'no-store',
+    })
+
+    clear()
+
+    if (!response.ok) {
+      const body = await response.text().catch(() => '')
+      throw new Error(body || `API request failed with status ${response.status}`)
+    }
+
+    return response.json() as Promise<T>
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error('Request timed out. Please try again.')
+    }
+
+    if (error instanceof TypeError) {
+      throw new Error('Network error. Please check your connection and try again.')
+    }
+
+    throw error
   }
-
-  return response.json() as Promise<T>
 }
 
 export interface CreateApplicationPayload {

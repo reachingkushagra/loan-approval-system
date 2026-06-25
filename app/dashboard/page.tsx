@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Progress } from '@/components/ui/progress'
 import { ApplicationsTable } from '@/components/applications-table'
 import { currency } from '@/lib/data'
+import { API_BASE_URL } from '@/src/config/api'
 
 type Application = {
   id: number
@@ -29,7 +30,7 @@ type Application = {
   timeline: { id: string; label: string; description: string; date: string; status: string }[]
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+const API_URL = API_BASE_URL
 
 async function fetchApplications(applicantId: number) {
   const res = await fetch(`${API_URL}/applications?applicant_id=${applicantId}`, {
@@ -37,7 +38,8 @@ async function fetchApplications(applicantId: number) {
   })
 
   if (!res.ok) {
-    throw new Error('Unable to fetch applications')
+    const body = await res.text().catch(() => '')
+    throw new Error(body || 'Unable to fetch applications')
   }
 
   return res.json() as Promise<Application[]>
