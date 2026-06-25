@@ -48,8 +48,19 @@ const opsNav = [
   { title: 'Analytics', href: '/admin', icon: BarChart3 },
 ]
 
-export function AppSidebar() {
+function getInitials(name: string) {
+  return name
+    .split(' ')
+    .filter(Boolean)
+    .map((part) => part[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase()
+}
+
+export function AppSidebar({ userName = 'Applicant' }: { userName?: string }) {
   const pathname = usePathname()
+  const initials = getInitials(userName)
 
   return (
     <Sidebar>
@@ -141,11 +152,11 @@ export function AppSidebar() {
                 <Link href="/">
                   <Avatar className="size-8">
                     <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground text-xs">
-                      AO
+                      {initials}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex flex-1 flex-col leading-tight">
-                    <span className="text-sm font-medium">Amara Okafor</span>
+                    <span className="text-sm font-medium">{userName}</span>
                     <span className="text-xs text-sidebar-foreground/60">Sign out</span>
                   </div>
                   <LogOut className="size-4 text-sidebar-foreground/60" />

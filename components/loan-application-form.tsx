@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Check, ChevronLeft, ChevronRight } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { createApplication } from '@/lib/api'
 import { currency } from '@/lib/data'
 import { Button } from '@/components/ui/button'
 import {
@@ -27,7 +28,14 @@ import {
 
 const steps = ['Consent', 'Borrower profile', 'Cash flow', 'Guarantor', 'Review']
 const loanTypes = ['Personal', 'Auto', 'Home', 'Business', 'Education']
-const purposes = ['Career transition', 'Education', 'Relocation', 'Freelancer equipment', 'Emergency buffer', 'Other']
+const purposes = [
+  'Career transition',
+  'Education',
+  'Relocation',
+  'Freelancer equipment',
+  'Emergency buffer',
+  'Other',
+]
 
 export function LoanApplicationForm() {
   const router = useRouter()
@@ -38,6 +46,16 @@ export function LoanApplicationForm() {
   const [income, setIncome] = useState('3200')
   const [employment, setEmployment] = useState('Full-time')
   const [purpose, setPurpose] = useState('Career transition')
+  const [educationSignal, setEducationSignal] = useState('Coding bootcamp graduate')
+  const [careerSignal, setCareerSignal] = useState('Operations analyst role starting next month')
+  const [guarantor, setGuarantor] = useState('Mina Okafor')
+  const [relationship, setRelationship] = useState('Sister')
+  const [supportNote, setSupportNote] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
+  const [coApplicantName, setCoApplicantName] = useState('')
+  const [coApplicantRelationship, setCoApplicantRelationship] = useState('')
 
   const rate = useMemo(() => {
     const base: Record<string, number> = {
@@ -56,12 +74,45 @@ export function LoanApplicationForm() {
     return (amount * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1)
   }, [amount, term, rate])
 
-  function next() {
+  const applicantId = 1
+
+  async function handleSubmit() {
     if (step < steps.length - 1) {
-      setStep((s) => s + 1)
-    } else {
+      setStep((current) => current + 1)
+      return
+    }
+
+    setIsSubmitting(true)
+
+    try {
+      await createApplication({
+        applicant_id: applicantId,
+        type,
+        termMonths: Number(term),
+        rate,
+        amount,
+        annualIncome: Number(income) * 12,
+        employmentType: employment,
+        purpose,
+        educationSignal,
+        careerSignal,
+        monthlyIncome: Number(income),
+        monthlyExpenses: Number(income) * 0.6,
+        cashFlowStability: Number(income) - Number(income) * 0.6 > 600 ? 'stable' : 'tight',
+        profileType: 'first-time',
+        coApplicantName: coApplicantName,
+        coApplicantRelationship: coApplicantRelationship,
+        coApplicantIncome: 3600,
+        coApplicantCreditScore: 748,
+      })
+
       toast.success('Application submitted for transparent review')
       router.push('/results')
+    } catch (error) {
+      toast.error('Unable to submit application. Please try again.')
+      console.error(error)
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -118,7 +169,7 @@ export function LoanApplicationForm() {
                   I agree that my application can be assessed with transparent scoring based on income, education, career, and trust signals. I understand I can receive explainable reasons, fix-and-resubmit guidance, and a clear next step if more information is needed.
                 </p>
                 <div className="rounded-xl border bg-background p-3 text-sm text-muted-foreground">
-                  We show credit score and trust score separately so you can see what matters most.
+                  We surface credit score and trust score separately so you can see what matters most.
                 </div>
               </div>
             )}
@@ -127,11 +178,11 @@ export function LoanApplicationForm() {
               <div className="grid gap-5 sm:grid-cols-2">
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="first">First name</Label>
-                  <Input id="first" defaultValue="Amara" />
+                  <Input id="first" value={firstName} onChange={(event) => setFirstName(event.target.value)} />
                 </div>
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="last">Last name</Label>
-                  <Input id="last" defaultValue="Okafor" />
+                  <Input id="last" value={lastName} onChange={(event) => setLastName(event.target.value)} />
                 </div>
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="dob">Date of birth</Label>
@@ -143,7 +194,7 @@ export function LoanApplicationForm() {
                 </div>
                 <div className="flex flex-col gap-2 sm:col-span-2">
                   <Label htmlFor="school">Education or training</Label>
-                  <Input id="school" defaultValue="Coding bootcamp graduate" />
+                  <Input id="school" value={educationSignal} onChange={(event) => setEducationSignal(event.target.value)} />
                 </div>
               </div>
             )}
@@ -195,9 +246,9 @@ export function LoanApplicationForm() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {['Full-time', 'Part-time', 'Freelance', 'Internship'].map((e) => (
-                          <SelectItem key={e} value={e}>
-                            {e}
+                        {['Full-time', 'Part-time', 'Freelance', 'Internship'].map((option) => (
+                          <SelectItem key={option} value={option}>
+                            {option}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -223,7 +274,13 @@ export function LoanApplicationForm() {
 
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="notes">How this loan helps your goals</Label>
-                  <Textarea id="notes" rows={3} placeholder="Share your career, education, or cash-flow story here." />
+                  <Textarea
+                    id="notes"
+                    rows={3}
+                    value={careerSignal}
+                    onChange={(e) => setCareerSignal(e.target.value)}
+                    placeholder="Share your career, education, or cash-flow story here."
+                  />
                 </div>
               </div>
             )}
@@ -232,15 +289,21 @@ export function LoanApplicationForm() {
               <div className="grid gap-5">
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="guarantor">Guarantor / co-applicant name</Label>
-                  <Input id="guarantor" defaultValue="Mina Okafor" />
+                  <Input id="guarantor" value={guarantor} onChange={(e) => setGuarantor(e.target.value)} />
                 </div>
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="relationship">Relationship</Label>
-                  <Input id="relationship" defaultValue="Sister" />
+                  <Input id="relationship" value={relationship} onChange={(e) => setRelationship(e.target.value)} />
                 </div>
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="support">Support note</Label>
-                  <Textarea id="support" rows={3} placeholder="Explain how the guarantor supports this application." />
+                  <Textarea
+                    id="support"
+                    rows={3}
+                    value={supportNote}
+                    onChange={(e) => setSupportNote(e.target.value)}
+                    placeholder="Explain how the guarantor supports this application."
+                  />
                 </div>
               </div>
             )}
@@ -257,11 +320,15 @@ export function LoanApplicationForm() {
             )}
 
             <div className="mt-2 flex items-center justify-between gap-3">
-              <Button variant="ghost" onClick={() => setStep((s) => Math.max(0, s - 1))} disabled={step === 0}>
+              <Button
+                variant="ghost"
+                onClick={() => setStep((s) => Math.max(0, s - 1))}
+                disabled={step === 0 || isSubmitting}
+              >
                 <ChevronLeft data-icon="inline-start" />
                 Back
               </Button>
-              <Button onClick={next}>
+              <Button onClick={handleSubmit} disabled={isSubmitting}>
                 {step === steps.length - 1 ? 'Submit application' : 'Continue'}
                 {step !== steps.length - 1 && <ChevronRight data-icon="inline-end" />}
               </Button>

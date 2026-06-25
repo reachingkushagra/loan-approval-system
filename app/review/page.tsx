@@ -3,23 +3,41 @@ import { DashboardShell } from '@/components/dashboard-shell'
 import { StatCard } from '@/components/stat-card'
 import { ReviewQueue } from '@/components/review-queue'
 import { Button } from '@/components/ui/button'
-import { applications, currency } from '@/lib/data'
+import { getApplications } from '@/lib/api'
 
-export default function ReviewPage() {
+export default async function ReviewPage() {
+  let applications = []
+  let error = ''
+
+  try {
+    applications = await getApplications()
+  } catch (err) {
+    error = 'Unable to load review applications.'
+  }
+
+  if (error) {
+    return (
+      <DashboardShell
+        title="Officer review"
+        description="Assess, approve, and decision incoming loan applications."
+      >
+        <div className="rounded-2xl border bg-card p-6 text-sm text-red-600">{error}</div>
+      </DashboardShell>
+    )
+  }
+
   const pending = applications.filter(
     (a) => a.status === 'submitted' || a.status === 'under-review',
   ).length
   const pipeline = applications
     .filter((a) => a.status !== 'rejected')
-    .reduce((sum, a) => sum + a.amount, 0)
+    .reduce((sum, app) => sum + app.amount, 0)
 
   return (
     <DashboardShell
       title="Officer review"
       description="Assess, approve, and decision incoming loan applications."
-      actions={
-        <Button variant="outline">Export queue</Button>
-      }
+      actions={<Button variant="outline">Export queue</Button>}
     >
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
@@ -37,7 +55,7 @@ export default function ReviewPage() {
         />
         <StatCard
           label="Pipeline value"
-          value={currency(pipeline)}
+          value={`$${pipeline.toLocaleString()}`}
           icon={ClipboardList}
           hint="Active applications"
         />
@@ -51,7 +69,7 @@ export default function ReviewPage() {
         />
       </div>
 
-      <ReviewQueue />
+      <ReviewQueue applications={applications} />
     </DashboardShell>
   )
 }

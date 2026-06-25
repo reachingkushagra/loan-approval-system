@@ -1,3 +1,7 @@
+'use client'
+
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   ArrowRight,
@@ -12,12 +16,234 @@ import {
   TrendingUp,
   Wallet2,
 } from 'lucide-react'
+import { submitConsent } from '@/lib/api'
 import { type LoanApplication } from '@/lib/data'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Timeline } from '@/components/timeline'
 
-export function LoanReadinessScreen({ application }: { application: LoanApplication }) {
+export function ScoreCard({
+  label,
+  value,
+  hint,
+  tone = 'default',
+}: {
+  label: string
+  value: string
+  hint?: string
+  tone?: 'default' | 'good' | 'warning' | 'danger'
+}) {
+  const tones = {
+    default: 'border-border bg-card',
+    good: 'border-emerald-200 bg-emerald-50',
+    warning: 'border-amber-200 bg-amber-50',
+    danger: 'border-rose-200 bg-rose-50',
+  }
+
+  return (
+    <div className={`rounded-2xl border p-4 shadow-sm ${tones[tone]}`}>
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <p className="text-sm text-muted-foreground">{label}</p>
+          <p className="mt-2 text-2xl font-semibold tracking-tight">{value}</p>
+        </div>
+        <span className="rounded-full bg-background/70 p-2">
+          <BadgeCheck className="size-4 text-muted-foreground" />
+        </span>
+      </div>
+      {hint && <p className="mt-3 text-sm text-muted-foreground">{hint}</p>}
+    </div>
+  )
+}
+
+export function ReasonChip({
+  label,
+  tone = 'default',
+}: {
+  label: string
+  tone?: 'default' | 'good' | 'warning'
+}) {
+  const tones = {
+    default: 'bg-muted text-muted-foreground',
+    good: 'bg-emerald-50 text-emerald-700',
+    warning: 'bg-amber-50 text-amber-700',
+  }
+
+  return (
+    <span className={`inline-flex rounded-full px-3 py-1 text-sm font-medium ${tones[tone]}`}>
+      {label}
+    </span>
+  )
+}
+
+export function ChecklistItem({
+  label,
+  done,
+  hint,
+}: {
+  label: string
+  done: boolean
+  hint: string
+}) {
+  return (
+    <div className="flex items-start gap-3 rounded-xl border bg-card p-3">
+      {done ? (
+        <CheckCircle2 className="mt-0.5 size-5 text-emerald-600" />
+      ) : (
+        <Circle className="mt-0.5 size-5 text-muted-foreground" />
+      )}
+      <div>
+        <p className="text-sm font-medium">{label}</p>
+        <p className="text-sm text-muted-foreground">{hint}</p>
+      </div>
+    </div>
+  )
+}
+
+export function RecommendationPanel({
+  title,
+  items,
+}: {
+  title: string
+  items: string[]
+}) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Sparkles className="size-4 text-primary" />
+          {title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-2">
+        {items.map((item) => (
+          <div key={item} className="rounded-lg border bg-background/70 p-3 text-sm text-muted-foreground">
+            {item}
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  )
+}
+
+export function BorrowerOnboarding({ applicantId }: { applicantId: number }) {
+  const router = useRouter()
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [hasConsented, setHasConsented] = useState(false)
+  const [error, setError] = useState('')
+
+  async function handleConsent() {
+    setIsSubmitting(true)
+    setError('')
+
+    try {
+      await submitConsent({
+        user_id: applicantId,
+        application_id: null,
+        consent_text:
+          'I agree to transparent underwriting and explainable credit decisions.',
+        consented: true,
+      })
+      setHasConsented(true)
+      router.push('/apply')
+    } catch (err) {
+      setError('Unable to save consent. Please try again.')
+      console.error(err)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  return (
+    <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+      <Card>
+        <CardHeader>
+          <CardTitle>Welcome to BrightBridge</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          <div className="rounded-2xl border bg-linear-to-br from-primary/10 via-background to-background p-5">
+            <p className="text-sm font-medium text-primary">Youth-first lending</p>
+            <h2 className="mt-2 text-2xl font-semibold">
+              A clearer path to your first credit or first loan.
+            </h2>
+            <p className="mt-3 text-sm text-muted-foreground">
+              We combine transparent scoring, explainable reasons, and a fix-and-resubmit workflow so young borrowers can understand and improve their outcome.
+            </p>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-xl border bg-card p-3">
+              <ShieldCheck className="size-4 text-primary" />
+              <p className="mt-2 text-sm font-medium">Explainable decisions</p>
+            </div>
+            <div className="rounded-xl border bg-card p-3">
+              <Sparkles className="size-4 text-primary" />
+              <p className="mt-2 text-sm font-medium">First-loan mode</p>
+            </div>
+            <div className="rounded-xl border bg-card p-3">
+              <Wallet2 className="size-4 text-primary" />
+              <p className="mt-2 text-sm font-medium">Cash-flow underwriting</p>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <ChecklistItem label="Consent shared" done hint="Borrower agreed to transparent underwriting." />
+            <ChecklistItem label="Income proof uploaded" done hint="Recent payslip or invoice included." />
+            <ChecklistItem label="Identity verified" done hint="Government ID and selfie reviewed." />
+            <ChecklistItem label="Career signal added" done hint="Add offer letter or training evidence." />
+          </div>
+
+          {error && (
+            <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+              {error}
+            </div>
+          )}
+
+          <div className="flex flex-wrap gap-3">
+            <Button onClick={handleConsent} disabled={isSubmitting || hasConsented}>
+              {hasConsented ? 'Consent saved' : 'Agree and continue'}
+              <ArrowRight className="size-4" />
+            </Button>
+            <Button variant="outline" render={<Link href="/readiness" />}>
+              View readiness score
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>What you consent to</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4 text-sm text-muted-foreground">
+          <p>We use your income, education, career, and support signals to estimate readiness and explain any decision.</p>
+          <p>Your credit score and trust score are shown separately so you can see what matters most.</p>
+          <p>If a file needs more context, we may ask for a quick update instead of a hard rejection.</p>
+          <div className="rounded-xl border bg-secondary/40 p-4">
+            <p className="font-medium text-foreground">Borrower promise</p>
+            <p className="mt-2">You can fix, resubmit, and receive targeted suggestions after a decision.</p>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+export function LoanReadinessScreen({
+  application,
+  scoreBreakdown,
+}: {
+  application: LoanApplication
+  scoreBreakdown?: {
+    readiness_score: number
+    credit_score: number
+    trust_score: number
+    approval_probability: number
+    reasons: string[]
+    recommendations: string[]
+    breakdown: Record<string, unknown>
+  } | null
+}) {
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_0.8fr]">
       <div className="space-y-6">
@@ -43,17 +269,28 @@ export function LoanReadinessScreen({ application }: { application: LoanApplicat
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Why this score moved</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-wrap gap-2">
-            <ReasonChip label="Stable monthly surplus" tone="good" />
-            <ReasonChip label="Career signal improving" tone="good" />
-            <ReasonChip label="First-loan support available" tone="good" />
-            <ReasonChip label="Document checklist nearly complete" tone="warning" />
-          </CardContent>
-        </Card>
+        {scoreBreakdown && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Score breakdown</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Approval probability: {scoreBreakdown.approval_probability}%
+              </p>
+              <div className="grid gap-2">
+                {scoreBreakdown.reasons.map((reason) => (
+                  <ReasonChip key={reason} label={reason} tone="good" />
+                ))}
+              </div>
+              <div className="grid gap-2">
+                {scoreBreakdown.recommendations.map((recommendation) => (
+                  <ReasonChip key={recommendation} label={recommendation} tone="warning" />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       <div className="space-y-6">
@@ -66,12 +303,9 @@ export function LoanReadinessScreen({ application }: { application: LoanApplicat
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm text-muted-foreground">
-            <p>Upload a signed offer letter or training completion badge.</p>
-            <p>Add a co-applicant or guarantor and show 2–3 months of consistent income.</p>
-            <p>Keep the requested amount close to your surplus so underwriting stays comfortable.</p>
-            <Button className="w-full" render={<Link href="/fix" />}>
-              Open fix-and-resubmit <ArrowRight className="size-4" />
-            </Button>
+            <p>Upload proof of income, training certificates, or a guarantor statement.</p>
+            <p>Keep the requested amount aligned with your cash-flow surplus.</p>
+            <p>Stronger support signals reduce manual review risk.</p>
           </CardContent>
         </Card>
       </div>
@@ -79,7 +313,21 @@ export function LoanReadinessScreen({ application }: { application: LoanApplicat
   )
 }
 
-export function DecisionResults({ application }: { application: LoanApplication }) {
+export function DecisionResults({
+  application,
+  scoreBreakdown,
+}: {
+  application: LoanApplication
+  scoreBreakdown?: {
+    readiness_score: number
+    credit_score: number
+    trust_score: number
+    approval_probability: number
+    reasons: string[]
+    recommendations: string[]
+    breakdown: Record<string, unknown>
+  } | null
+}) {
   return (
     <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
       <div className="space-y-6">

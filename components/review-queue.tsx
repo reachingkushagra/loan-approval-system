@@ -1,15 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { applications, statusLabels, type LoanStatus } from '@/lib/data'
+import { statusLabels, type LoanApplication, type LoanStatus } from '@/lib/data'
 import { ApplicationsTable } from '@/components/applications-table'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 const filters: { value: 'all' | LoanStatus; label: string }[] = [
@@ -20,7 +14,7 @@ const filters: { value: 'all' | LoanStatus; label: string }[] = [
   { value: 'rejected', label: statusLabels.rejected },
 ]
 
-export function ReviewQueue() {
+export function ReviewQueue({ applications }: { applications: LoanApplication[] }) {
   const [filter, setFilter] = useState<'all' | LoanStatus>('all')
 
   const filtered =
@@ -33,15 +27,11 @@ export function ReviewQueue() {
       <CardHeader className="gap-4">
         <div className="flex flex-col gap-1">
           <CardTitle>Review queue</CardTitle>
-          <CardDescription>
-            {filtered.length} application{filtered.length !== 1 && 's'} matching
-            this filter.
-          </CardDescription>
+          <p className="text-sm text-muted-foreground">
+            {filtered.length} application{filtered.length !== 1 && 's'} matching this filter.
+          </p>
         </div>
-        <Tabs
-          value={filter}
-          onValueChange={(v) => setFilter(v as 'all' | LoanStatus)}
-        >
+        <Tabs value={filter} onValueChange={(v) => setFilter(v as 'all' | LoanStatus)}>
           <TabsList className="w-full justify-start overflow-x-auto sm:w-auto">
             {filters.map((f) => (
               <TabsTrigger key={f.value} value={f.value}>

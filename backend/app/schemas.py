@@ -127,6 +127,7 @@ class LoanApplicationRead(LoanApplicationBase):
     approvalProbability: int
     income: float
     submittedAt: str
+    purpose: str
     officer: str
     riskScore: int
     timeline: List[TimelineEvent] = []
@@ -213,6 +214,25 @@ class ReadinessScoreResponse(BaseModel):
     recommendations: List[str] = []
 
 
+class VolumePoint(BaseModel):
+    month: str
+    approved: int
+    rejected: int
+    volume: float
+
+
+class ApprovalTrendPoint(BaseModel):
+    month: str
+    approval: int
+    firstTime: int
+
+
+class LoanMixPoint(BaseModel):
+    type: str
+    value: int
+    fill: str
+
+
 class AnalyticsResponse(BaseModel):
     total_applications: int
     pending: int
@@ -223,3 +243,12 @@ class AnalyticsResponse(BaseModel):
     average_readiness_score: float
     average_credit_score: float
     average_trust_score: float
+    monthly_volume: List[VolumePoint] = []
+    approval_trend: List[ApprovalTrendPoint] = []
+    loan_mix: List[LoanMixPoint] = []
+    model_config = ConfigDict(from_attributes=True)
+
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str

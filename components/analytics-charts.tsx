@@ -27,7 +27,10 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from '@/components/ui/chart'
-import { approvalTrend, loanMix, monthlyVolume } from '@/lib/data'
+
+type VolumePoint = { month: string; approved: number; rejected: number; volume: number }
+type ApprovalTrendPoint = { month: string; approval: number; firstTime: number }
+type LoanMixPoint = { type: string; value: number; fill: string }
 
 const volumeConfig = {
   approved: { label: 'Approved', color: 'var(--chart-1)' },
@@ -35,37 +38,27 @@ const volumeConfig = {
 } satisfies ChartConfig
 
 const trendConfig = {
-  rate: { label: 'Approval rate', color: 'var(--chart-2)' },
+  approval: { label: 'Approval rate', color: 'var(--color-rate)' },
 } satisfies ChartConfig
 
 const mixConfig = {
   value: { label: 'Share' },
-  home: { label: 'Home', color: 'var(--chart-1)' },
-  auto: { label: 'Auto', color: 'var(--chart-2)' },
-  business: { label: 'Business', color: 'var(--chart-3)' },
-  personal: { label: 'Personal', color: 'var(--chart-4)' },
-  education: { label: 'Education', color: 'var(--chart-5)' },
 } satisfies ChartConfig
 
-export function VolumeChart() {
+export function VolumeChart({ data }: { data: VolumePoint[] }) {
   return (
     <Card className="lg:col-span-2">
       <CardHeader>
         <CardTitle>Application volume</CardTitle>
         <CardDescription>
-          Approved vs. rejected decisions over the last 7 months.
+          Approved vs rejected decisions over recent months.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer config={volumeConfig} className="h-72 w-full">
-          <BarChart data={monthlyVolume} accessibilityLayer>
+          <BarChart data={data} accessibilityLayer>
             <CartesianGrid vertical={false} strokeDasharray="3 3" />
-            <XAxis
-              dataKey="month"
-              tickLine={false}
-              axisLine={false}
-              tickMargin={8}
-            />
+            <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
             <YAxis tickLine={false} axisLine={false} tickMargin={8} width={28} />
             <ChartTooltip content={<ChartTooltipContent />} />
             <ChartLegend content={<ChartLegendContent />} />
@@ -78,16 +71,16 @@ export function VolumeChart() {
   )
 }
 
-export function ApprovalTrendChart() {
+export function ApprovalTrendChart({ data }: { data: ApprovalTrendPoint[] }) {
   return (
     <Card>
       <CardHeader>
         <CardTitle>Approval rate</CardTitle>
-        <CardDescription>Weekly trend, last 8 weeks.</CardDescription>
+        <CardDescription>Weekly trend over recent months.</CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer config={trendConfig} className="h-72 w-full">
-          <AreaChart data={approvalTrend} accessibilityLayer>
+          <AreaChart data={data} accessibilityLayer>
             <defs>
               <linearGradient id="fillRate" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="var(--color-rate)" stopOpacity={0.3} />
@@ -95,23 +88,10 @@ export function ApprovalTrendChart() {
               </linearGradient>
             </defs>
             <CartesianGrid vertical={false} strokeDasharray="3 3" />
-            <XAxis dataKey="week" tickLine={false} axisLine={false} tickMargin={8} />
-            <YAxis
-              tickLine={false}
-              axisLine={false}
-              tickMargin={8}
-              width={32}
-              domain={[60, 100]}
-              tickFormatter={(v) => `${v}%`}
-            />
+            <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
+            <YAxis tickLine={false} axisLine={false} tickMargin={8} width={32} domain={[60, 100]} tickFormatter={(v) => `${v}%`} />
             <ChartTooltip content={<ChartTooltipContent />} />
-            <Area
-              dataKey="rate"
-              type="monotone"
-              stroke="var(--color-rate)"
-              strokeWidth={2}
-              fill="url(#fillRate)"
-            />
+            <Area type="monotone" dataKey="approval" stroke="var(--color-rate)" strokeWidth={2} fill="url(#fillRate)" />
           </AreaChart>
         </ChartContainer>
       </CardContent>
@@ -119,7 +99,7 @@ export function ApprovalTrendChart() {
   )
 }
 
-export function LoanMixChart() {
+export function LoanMixChart({ data }: { data: LoanMixPoint[] }) {
   return (
     <Card>
       <CardHeader>
@@ -127,27 +107,15 @@ export function LoanMixChart() {
         <CardDescription>Share of active loans by product.</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer
-          config={mixConfig}
-          className="mx-auto aspect-square h-64"
-        >
+        <ChartContainer config={mixConfig} className="mx-auto aspect-square h-64">
           <PieChart>
             <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-            <Pie
-              data={loanMix}
-              dataKey="value"
-              nameKey="type"
-              innerRadius={56}
-              strokeWidth={4}
-            >
-              {loanMix.map((entry) => (
+            <Pie data={data} dataKey="value" nameKey="type" innerRadius={56} strokeWidth={4}>
+              {data.map((entry) => (
                 <Cell key={entry.type} fill={entry.fill} />
               ))}
             </Pie>
-            <ChartLegend
-              content={<ChartLegendContent nameKey="type" />}
-              className="flex-wrap gap-2"
-            />
+            <ChartLegend content={<ChartLegendContent nameKey="type" />} className="flex-wrap gap-2" />
           </PieChart>
         </ChartContainer>
       </CardContent>

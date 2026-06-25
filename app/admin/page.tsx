@@ -1,23 +1,35 @@
 import { Banknote, TrendingUp, Users, Timer } from 'lucide-react'
 import { DashboardShell } from '@/components/dashboard-shell'
 import { StatCard } from '@/components/stat-card'
-import {
-  ApprovalTrendChart,
-  LoanMixChart,
-  VolumeChart,
-} from '@/components/analytics-charts'
+import { ApprovalTrendChart, LoanMixChart, VolumeChart } from '@/components/analytics-charts'
 import { ApplicationsTable } from '@/components/applications-table'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { applications } from '@/lib/data'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { getApplications, getAnalytics } from '@/lib/api'
 
-export default function AdminPage() {
+export default async function AdminPage() {
+  let applications = []
+  let analytics = null
+  let error = ''
+
+  try {
+    applications = await getApplications()
+    analytics = await getAnalytics()
+  } catch (err) {
+    error = 'Unable to load analytics data.'
+  }
+
+  if (error) {
+    return (
+      <DashboardShell
+        title="Analytics overview"
+        description="Portfolio performance and lending operations at a glance."
+      >
+        <div className="rounded-2xl border bg-card p-6 text-sm text-red-600">{error}</div>
+      </DashboardShell>
+    )
+  }
+
   return (
     <DashboardShell
       title="Analytics overview"
@@ -26,49 +38,47 @@ export default function AdminPage() {
     >
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
-          label="Total disbursed"
-          value="$48.2M"
+          label="Total applications"
+          value={String(analytics.total_applications)}
           icon={Banknote}
           delta="+12.4%"
-          hint="This quarter"
+          hint="Since launch"
         />
         <StatCard
           label="Approval rate"
-          value="83%"
+          value={`${Math.round((analytics.approved / Math.max(analytics.total_applications, 1)) * 100)}%`}
           icon={TrendingUp}
           delta="+4.1%"
-          hint="vs. last month"
+          hint="Across reviewed loans"
         />
         <StatCard
-          label="Active borrowers"
-          value="2,841"
+          label="Pending review"
+          value={String(analytics.pending)}
           icon={Users}
           delta="+186"
-          hint="Net new this month"
+          hint="Awaiting decision"
         />
         <StatCard
-          label="Avg. decision time"
-          value="4.2h"
+          label="Rejected"
+          value={String(analytics.rejected)}
           icon={Timer}
           trend="down"
-          delta="-31%"
-          hint="Faster than target"
+          delta={analytics.rejected > analytics.more_info_required ? `-${analytics.rejected - analytics.more_info_required}` : '0'}
+          hint="Review pipeline"
         />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        <VolumeChart />
-        <ApprovalTrendChart />
+        <VolumeChart data={analytics.monthly_volume} />
+        <ApprovalTrendChart data={analytics.approval_trend} />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        <LoanMixChart />
+        <LoanMixChart data={analytics.loan_mix} />
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle>Recent activity</CardTitle>
-            <CardDescription>
-              Latest applications across all products.
-            </CardDescription>
+            <CardDescription>Latest applications across all products.</CardDescription>
           </CardHeader>
           <CardContent className="px-0 sm:px-2">
             <ApplicationsTable data={applications.slice(0, 5)} />

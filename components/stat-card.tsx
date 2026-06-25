@@ -15,7 +15,7 @@ export function StatCard({
   value: string
   delta?: string
   trend?: 'up' | 'down'
-  icon: LucideIcon
+  icon?: LucideIcon
   hint?: string
 }) {
   return (
@@ -25,9 +25,11 @@ export function StatCard({
           <span className="text-sm font-medium text-muted-foreground">
             {label}
           </span>
-          <span className="flex size-9 items-center justify-center rounded-lg bg-secondary text-primary">
-            <Icon className="size-4.5" />
-          </span>
+          {Icon && (
+            <span className="flex size-9 items-center justify-center rounded-lg bg-secondary text-primary">
+              <Icon className="size-4.5" />
+            </span>
+          )}
         </div>
         <div className="flex items-end justify-between gap-2">
           <span className="text-2xl font-semibold tracking-tight tabular-nums">

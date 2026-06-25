@@ -43,6 +43,8 @@ class LoanApplication(Base):
     employment_type = Column(String(100), nullable=False)
     purpose = Column(Text, nullable=False)
     profile_type = Column(String(50), nullable=True, default='first-time')
+    education_signal = Column(Text, nullable=True)
+    career_signal = Column(Text, nullable=True)
 
     risk_score = Column(Integer, nullable=False, default=0)
     status = Column(String(50), nullable=False, default='PENDING')
@@ -57,8 +59,6 @@ class LoanApplication(Base):
     approval_reasons = Column(Text, nullable=True)
     rejection_reasons = Column(Text, nullable=True)
     improvement_suggestions = Column(Text, nullable=True)
-    education_signal = Column(Text, nullable=True)
-    career_signal = Column(Text, nullable=True)
 
     co_applicant_name = Column(String(255), nullable=True)
     co_applicant_relationship = Column(String(100), nullable=True)

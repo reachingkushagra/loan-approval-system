@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
+import { loginUser } from '@/lib/api'
 
 const highlights = [
   {
@@ -36,17 +37,28 @@ const highlights = [
 
 export default function LoginPage() {
   const router = useRouter()
+  const [email, setEmail] = useState('aditi.sharma@example.com')
+  const [password, setPassword] = useState('SecurePass123')
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
-    setTimeout(() => router.push('/dashboard'), 600)
+    setError('')
+
+    try {
+      const user = await loginUser({ email, password })
+      router.push(`/dashboard?applicantId=${user.id}`)
+    } catch {
+      setError('Invalid email or password')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
-      {/* Brand / marketing panel */}
       <div className="relative hidden flex-col justify-between overflow-hidden bg-sidebar p-10 text-sidebar-foreground lg:flex">
         <div className="flex items-center gap-2.5">
           <span className="flex size-9 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
@@ -60,19 +72,18 @@ export default function LoginPage() {
             Lending, modernized for borrowers and officers alike.
           </h1>
           <p className="mt-3 text-sidebar-foreground/70">
-            One platform to apply, track, review, and approve loans — with
-            transparency at every step.
+            One platform to apply, track, review, and approve loans — with transparency at every step.
           </p>
 
           <div className="mt-8 flex flex-col gap-5">
-            {highlights.map((h) => (
-              <div key={h.title} className="flex items-start gap-3">
+            {highlights.map((item) => (
+              <div key={item.title} className="flex items-start gap-3">
                 <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-sidebar-accent text-sidebar-primary">
-                  <h.icon className="size-4.5" />
+                  <item.icon className="size-4.5" />
                 </span>
                 <div>
-                  <p className="text-sm font-medium">{h.title}</p>
-                  <p className="text-sm text-sidebar-foreground/60">{h.body}</p>
+                  <p className="text-sm font-medium">{item.title}</p>
+                  <p className="text-sm text-sidebar-foreground/60">{item.body}</p>
                 </div>
               </div>
             ))}
@@ -84,7 +95,6 @@ export default function LoginPage() {
         </p>
       </div>
 
-      {/* Form panel */}
       <div className="flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-sm">
           <div className="mb-8 flex items-center gap-2.5 lg:hidden">
@@ -107,8 +117,9 @@ export default function LoginPage() {
                 <Input
                   id="email"
                   type="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
                   required
-                  defaultValue="amara.okafor@example.com"
                   placeholder="you@example.com"
                   className="pl-9"
                 />
@@ -118,10 +129,7 @@ export default function LoginPage() {
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password">Password</Label>
-                <Link
-                  href="#"
-                  className="text-xs font-medium text-primary hover:underline"
-                >
+                <Link href="#" className="text-xs font-medium text-primary hover:underline">
                   Forgot password?
                 </Link>
               </div>
@@ -130,13 +138,16 @@ export default function LoginPage() {
                 <Input
                   id="password"
                   type="password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
                   required
-                  defaultValue="password"
                   placeholder="••••••••"
                   className="pl-9"
                 />
               </div>
             </div>
+
+            {error && <div className="text-sm text-destructive">{error}</div>}
 
             <Button type="submit" className="mt-2 w-full" disabled={loading}>
               {loading ? 'Signing in…' : 'Sign in'}
@@ -149,20 +160,15 @@ export default function LoginPage() {
             <Separator className="flex-1" />
           </div>
 
-          <Button
-            variant="outline"
-            className="w-full"
-            render={<Link href="/dashboard" />}
-          >
-            Continue as guest demo
-          </Button>
+          <Link href="/dashboard">
+            <Button variant="outline" className="w-full">
+              Continue as guest demo
+            </Button>
+          </Link>
 
           <p className="mt-8 text-center text-sm text-muted-foreground">
             New to BrightBridge?{' '}
-            <Link
-              href="/apply"
-              className="font-medium text-primary hover:underline"
-            >
+            <Link href="/apply" className="font-medium text-primary hover:underline">
               Apply for a loan
             </Link>
           </p>

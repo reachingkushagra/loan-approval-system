@@ -52,3 +52,11 @@ def submit_consent(consent: schemas.ConsentSubmit, db: Session = Depends(get_db)
 @router.get('', response_model=List[schemas.UserRead])
 def list_users(db: Session = Depends(get_db)):
     return db.query(models.User).all()
+
+
+@router.post('/login', response_model=schemas.UserRead)
+def login_user(credentials: schemas.UserLogin, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.email == credentials.email).first()
+    if not user or user.password != credentials.password:
+        raise HTTPException(status_code=401, detail='Invalid email or password')
+    return user

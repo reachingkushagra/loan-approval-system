@@ -1,12 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { MoreHorizontal, ArrowUpDown } from 'lucide-react'
-import {
-  applications as allApplications,
-  currency,
-  type LoanApplication,
-} from '@/lib/data'
+import { type LoanApplication, currency } from '@/lib/data'
 import { StatusBadge } from '@/components/status-badge'
 import { ApplicationDetail } from '@/components/application-detail'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -43,18 +39,28 @@ function ReadinessMeter({ score }: { score: number }) {
 }
 
 export function ApplicationsTable({
-  data = allApplications,
+  data,
   showOfficer = true,
 }: {
-  data?: LoanApplication[]
+  data: LoanApplication[]
   showOfficer?: boolean
 }) {
+  const [rows, setRows] = useState<LoanApplication[]>(data ?? [])
   const [selected, setSelected] = useState<LoanApplication | null>(null)
   const [open, setOpen] = useState(false)
+
+  const memoizedRows = useMemo(() => rows, [rows])
 
   function openDetail(app: LoanApplication) {
     setSelected(app)
     setOpen(true)
+  }
+
+  function handleApplicationUpdated(updated: LoanApplication) {
+    setRows((current) =>
+      current.map((item) => (item.id === updated.id ? updated : item)),
+    )
+    setSelected(updated)
   }
 
   return (
@@ -81,7 +87,7 @@ export function ApplicationsTable({
           </TableHeader>
 
           <TableBody>
-            {data.map((app) => (
+            {memoizedRows.map((app) => (
               <TableRow
                 key={app.id}
                 className="cursor-pointer"
@@ -142,6 +148,7 @@ export function ApplicationsTable({
         application={selected}
         open={open}
         onOpenChange={setOpen}
+        onApplicationUpdated={handleApplicationUpdated}
       />
     </>
   )
